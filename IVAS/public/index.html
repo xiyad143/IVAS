@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iVAS SMS Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #0f0f23;
+            --secondary: #6a11cb;
+            --accent: #ff0080;
+            --success: #00ff88;
+            --warning: #ffcc00;
+            --danger: #ff4757;
+            --dark: #121212;
+            --light: #f8f9fa;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            --card-bg: rgba(15, 15, 35, 0.95);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--dark) 0%, #000000 100%);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: var(--light);
+            font-size: 14px;
+        }
+        
+        /* Floral Background */
+        .floral-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(106, 17, 203, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 0, 128, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(0, 255, 136, 0.1) 0%, transparent 50%);
+        }
+        
+        .floral-petal {
+            position: absolute;
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            border-radius: 50% 50% 50% 0;
+            opacity: 0.15;
+            filter: blur(1px);
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(10px, 20px) rotate(90deg);
+            }
+            50% {
+                transform: translate(20px, 10px) rotate(180deg);
+            }
+            75% {
+                transform: translate(10px, 0) rotate(270deg);
+            }
+        }
+        
+        /* Main Container */
+        .main-container {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Login Page */
+        #loginPage {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px 0;
+        }
+        
+        .brand-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 0 15px;
+        }
+        
+        .brand-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .brand-logo i {
+            font-size: 28px;
+            background: linear-gradient(45deg, var(--accent), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .brand-logo h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #fff, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .brand-tagline {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .feature-item {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-item:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .feature-item i {
+            font-size: 20px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        
+        .feature-item h4 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .feature-item p {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .login-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .login-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(45deg, var(--accent), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .login-header p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .form-label i {
+            color: var(--accent);
+            font-size: 14px;
+        }
+        
+        .cookie-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+        
+        .cookie-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(255, 0, 128, 0.1);
+        }
+        
+        .format-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success);
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        
+        .cookie-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .cookie-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .cookie-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 0, 128, 0.3);
+        }
+        
+        .quick-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+        
+        .quick-info h5 {
+            font-size: 13px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .info-item i {
+            color: var(--accent);
+            font-size: 10px;
+        }
+        
+        /* Dashboard Page */
+        #dashboardPage {
+            display: none;
+            padding-top: 15px;
+        }
+        
+        /* Top Navigation */
+        .top-nav {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            border-radius: 15px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--glass-border);
+            position: sticky;
+            top: 15px;
+            z-index: 100;
+        }
+        
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-brand i {
+            font-size: 20px;
+            background: linear-gradient(45deg, var(--accent), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-brand h1 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .profile-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .profile-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .profile-name {
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .profile-code {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* Mini Stats */
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .mini-stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+        
+        .mini-stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+        
+        .mini-stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .mini-stat-title {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .mini-stat-icon {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        
+        .mini-stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .mini-stat-change {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* Charts Container */
+        .charts-container {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .chart-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chart-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .chart-wrapper {
+            height: 200px;
+            position: relative;
+        }
+        
+        /* Sidebar Cards */
+        .sidebar-cards {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar-title i {
+            color: var(--accent);
+        }
+        
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .activity-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+        }
+        
+        .facebook-activity { background: #1877f2; }
+        .instagram-activity { background: #e4405f; }
+        .whatsapp-activity { background: #25d366; }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-message {
+            font-size: 12px;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        
+        .activity-time {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .country-flags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .country-flag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        
+        .flag-emoji {
+            font-size: 16px;
+        }
+        
+        .flag-count {
+            background: var(--secondary);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        /* Bottom Stats */
+        .bottom-stats {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 80px;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .stat-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .stat-badge {
+            padding: 4px 10px;
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success);
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th {
+            text-align: left;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+        }
+        
+        .data-table td {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+        }
+        
+        .service-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .badge-facebook { background: #1877f2; }
+        .badge-instagram { background: #e4405f; }
+        .badge-whatsapp { background: #25d366; }
+        
+        /* Action Buttons */
+        .action-buttons {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 100;
+        }
+        
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.1);
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+        }
+        
+        .action-btn.primary { background: var(--secondary); }
+        .action-btn.warning { background: var(--warning); }
+        .action-btn.danger { background: var(--danger); }
+        
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Fade Animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            border-radius: 3px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 380px) {
+            .main-container {
+                padding: 10px;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .brand-logo h1 {
+                font-size: 20px;
+            }
+            
+            .chart-wrapper {
+                height: 180px;
+            }
+            
+            .action-buttons {
+                bottom: 15px;
+                right: 15px;
+            }
+            
+            .action-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floral Background -->
+    <div class="floral-bg" id="floralBg"></div>
+    
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Login Page -->
+        <div id="loginPage" class="fade-in">
+            <div class="brand-section">
+                <div class="brand-logo">
+                    <i class="fas fa-sms"></i>
+                    <h1>XIYAD iVAS SMS Analyzer</h1>
+                </div>
+                
+                <p class="brand-tagline">
+                    Developer - Riyad Mahfuz
+                </p>
+
+                <div class="features">
+                    <div class="feature-item">
+                        <i class="fas fa-bolt"></i>
+                        <h4>Real-time</h4>
+                        <p>Live tracking & analytics</p>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <i class="fas fa-filter"></i>
+                        <h4>Smart Filtering</h4>
+                        <p>Social media focused</p>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <i class="fas fa-globe"></i>
+                        <h4>Global</h4>
+                        <p>200+ countries</p>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <i class="fas fa-chart-line"></i>
+                        <h4>Analytics</h4>
+                        <p>Interactive reports</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="login-card">
+                <div class="login-header">
+                    <h2>Welcome Back</h2>
+                    <p>Login with your iVAS cookies</p>
+                </div>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-key"></i>
+                            <span>iVAS Cookies</span>
+                        </label>
+                        
+                        <textarea 
+                            class="cookie-input" 
+                            id="cookieInput" 
+                            placeholder="Paste your iVAS cookies here..."
+                            required
+                        ></textarea>
+                        
+                        <div class="format-badge" id="formatBadge">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Auto-detection enabled</span>
+                        </div>
+                        
+                        <div class="cookie-actions">
+                            <button type="button" class="cookie-btn" onclick="detectFormat()">
+                                <i class="fas fa-magic"></i>
+                                Detect
+                            </button>
+                            <button type="button" class="cookie-btn" onclick="clearInput()">
+                                <i class="fas fa-trash"></i>
+                                Clear
+                            </button>
+                            <button type="button" class="cookie-btn" onclick="loadExample()">
+                                <i class="fas fa-eye"></i>
+                                Example
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="login-btn" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Login to Dashboard</span>
+                    </button>
+                </form>
+                
+                <div class="quick-info">
+                    <h5><i class="fas fa-lightbulb"></i> How to get cookies:</h5>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-check"></i>
+                        <span>1. Login to iVAS SMS platform</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-check"></i>
+                        <span>2. Open Developer Tools (F12)</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-check"></i>
+                        <span>3. Go to Application → Cookies</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-check"></i>
+                        <span>4. Copy cookies for iVAS.com</span>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px; font-size: 11px; color: rgba(255, 255, 255, 0.5);">
+                    <i class="fas fa-shield-alt"></i>
+                    Your cookies are encrypted and never stored
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dashboard Page -->
+        <div id="dashboardPage" class="fade-in">
+            <!-- Top Navigation -->
+            <nav class="top-nav">
+                <div class="nav-brand">
+                    <i class="fas fa-sms"></i>
+                    <h1>iVAS Dashboard</h1>
+                </div>
+                
+                <div class="profile-card" onclick="showProfileInfo()">
+                    <div class="profile-avatar" id="profileAvatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="profile-info">
+                        <div class="profile-name" id="profileName">Loading...</div>
+                        <div class="profile-code" id="profileCode">Account: ---</div>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- Mini Stats -->
+            <div class="mini-stats" id="miniStats">
+                <!-- Dynamic content -->
+            </div>
+            
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Service Distribution</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn" onclick="refreshServiceChart()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="serviceChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Country Distribution</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn" onclick="refreshCountryChart()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="countryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar Cards -->
+            <div class="sidebar-cards">
+                <div class="sidebar-card">
+                    <h4 class="sidebar-title">
+                        <i class="fas fa-history"></i>
+                        Recent Activity
+                    </h4>
+                    <div class="activity-list" id="activityList">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+                
+                <div class="sidebar-card">
+                    <h4 class="sidebar-title">
+                        <i class="fas fa-globe"></i>
+                        Top Countries
+                    </h4>
+                    <div class="country-flags" id="countryFlags">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Stats -->
+            <div class="bottom-stats">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3 class="stat-title">Live SMS Data</h3>
+                        <span class="stat-badge" id="liveCount">0 SMS</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="smsTable">
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Country</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="smsTableBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3 class="stat-title">Performance</h3>
+                        <span class="stat-badge" id="performanceBadge">Live</span>
+                    </div>
+                    <div id="performanceMetrics">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn primary" onclick="refreshDashboard()" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="action-btn warning" onclick="exportData()">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="action-btn danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        // Global variables
+        let serviceChart = null;
+        let countryChart = null;
+        let refreshInterval = null;
+        let userProfile = {};
+        
+        // Configure Toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000",
+            "newestOnTop": true
+        };
+        
+        // Create floral background
+        function createFloralBackground() {
+            const floralBg = document.getElementById('floralBg');
+            for (let i = 0; i < 15; i++) {
+                const petal = document.createElement('div');
+                petal.className = 'floral-petal';
+                const size = Math.random() * 60 + 20;
+                petal.style.width = size + 'px';
+                petal.style.height = size + 'px';
+                petal.style.left = Math.random() * 100 + '%';
+                petal.style.top = Math.random() * 100 + '%';
+                petal.style.opacity = Math.random() * 0.2 + 0.1;
+                petal.style.animationDelay = Math.random() * 20 + 's';
+                petal.style.animationDuration = Math.random() * 20 + 15 + 's';
+                floralBg.appendChild(petal);
+            }
+        }
+        
+        // Example cookies
+        const exampleCookies = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybjoxNzEwMjM0NTY3fQ.MockCookieForExample`;
+        
+        // Load example cookies
+        function loadExample() {
+            document.getElementById('cookieInput').value = exampleCookies;
+            detectFormat();
+            toastr.info('Example cookies loaded. Click "Login to Dashboard" to test.');
+        }
+        
+        // Clear input
+        function clearInput() {
+            document.getElementById('cookieInput').value = '';
+            document.getElementById('formatBadge').innerHTML = `
+                <i class="fas fa-info-circle"></i>
+                <span>Auto-detection enabled</span>
+            `;
+        }
+        
+        // Detect cookie format
+        function detectFormat() {
+            const input = document.getElementById('cookieInput').value.trim();
+            if (!input) {
+                toastr.warning('Please enter cookies first');
+                return;
+            }
+            
+            let format = 'Unknown';
+            let icon = 'fas fa-question';
+            let color = '#00ff88';
+            
+            if (input.startsWith('eyJ')) {
+                format = 'Base64 Encoded';
+                icon = 'fas fa-lock';
+            } else if (input.startsWith('{') || input.startsWith('[')) {
+                format = 'JSON Format';
+                icon = 'fas fa-code';
+            } else if (input.includes('=') && input.includes(';')) {
+                format = 'Raw Cookie String';
+                icon = 'fas fa-cookie';
+            } else if (input.includes('\t')) {
+                format = 'Browser Export';
+                icon = 'fas fa-download';
+            }
+            
+            document.getElementById('formatBadge').innerHTML = `
+                <i class="${icon}"></i>
+                <span>Detected: ${format}</span>
+            `;
+            document.getElementById('formatBadge').style.background = color + '20';
+            document.getElementById('formatBadge').style.color = color;
+            
+            toastr.success(`Detected format: ${format}`);
+        }
+        
+        // Handle login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const cookieInput = document.getElementById('cookieInput').value.trim();
+            if (!cookieInput) {
+                toastr.error('Please enter your iVAS cookies');
+                return;
+            }
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const originalText = loginBtn.innerHTML;
+            
+            // Show loading
+            loginBtn.innerHTML = `
+                <span class="loading"></span>
+                <span>Connecting...</span>
+            `;
+            loginBtn.disabled = true;
+            
+            try {
+                // Simulate API call (replace with actual backend URL)
+                setTimeout(() => {
+                    // Mock successful login
+                    const mockResponse = {
+                        success: true,
+                        profile: {
+                            name: "Riyad Mahfuz",
+                            account_code: "IVAS-123456",
+                            email: "xiyad@gmail.com",
+                            balance: "$1,234.56",
+                            country: "Bangladesh"
+                        },
+                        session_id: "session_" + Date.now()
+                    };
+                    
+                    if (mockResponse.success) {
+                        toastr.success('Login successful! Loading dashboard...');
+                        
+                        // Store profile info
+                        userProfile = mockResponse.profile;
+                        localStorage.setItem('ivas_profile', JSON.stringify(mockResponse.profile));
+                        localStorage.setItem('ivas_session', mockResponse.session_id);
+                        
+                        // Switch to dashboard
+                        setTimeout(() => {
+                            switchToDashboard();
+                        }, 1000);
+                        
+                    } else {
+                        toastr.error('Login failed: Invalid cookies');
+                        loginBtn.innerHTML = originalText;
+                        loginBtn.disabled = false;
+                    }
+                }, 1500);
+                
+            } catch (error) {
+                toastr.error('Connection error: ' + error.message);
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            }
+        });
+        
+        // Switch to dashboard
+        function switchToDashboard() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('dashboardPage').style.display = 'block';
+            document.getElementById('dashboardPage').classList.add('fade-in');
+            
+            updateProfileDisplay();
+            loadDashboard();
+            startAutoRefresh();
+        }
+        
+        // Update profile display
+        function updateProfileDisplay() {
+            const storedProfile = localStorage.getItem('ivas_profile');
+            if (storedProfile) {
+                userProfile = JSON.parse(storedProfile);
+            }
+            
+            if (userProfile.name) {
+                document.getElementById('profileName').textContent = userProfile.name;
+                document.getElementById('profileCode').textContent = `Acc: ${userProfile.account_code || 'N/A'}`;
+                
+                // Set avatar with first letter
+                const firstLetter = userProfile.name.charAt(0).toUpperCase();
+                document.getElementById('profileAvatar').innerHTML = `<span>${firstLetter}</span>`;
+            }
+        }
+        
+        // Show profile info
+        function showProfileInfo() {
+            toastr.info(`
+                <div style="text-align: left; font-size: 12px;">
+                    <strong style="color: #ff0080;">Profile Details:</strong><br>
+                    👤 Name: ${userProfile.name}<br>
+                    🔑 Account: ${userProfile.account_code}<br>
+                    📧 Email: ${userProfile.email}<br>
+                    💰 Balance: ${userProfile.balance}<br>
+                    🌍 Country: ${userProfile.country}
+                </div>
+            `);
+        }
+        
+        // Mock data for dashboard
+        function generateMockData() {
+            const services = ['Facebook', 'Instagram', 'WhatsApp'];
+            const countries = [
+  { name: 'Afghanistan', emoji: '🇦🇫', code: 'AF' },
+  { name: 'Albania', emoji: '🇦🇱', code: 'AL' },
+  { name: 'Algeria', emoji: '🇩🇿', code: 'DZ' },
+  { name: 'Andorra', emoji: '🇦🇩', code: 'AD' },
+  { name: 'Angola', emoji: '🇦🇴', code: 'AO' },
+  { name: 'Antigua and Barbuda', emoji: '🇦🇬', code: 'AG' },
+  { name: 'Argentina', emoji: '🇦🇷', code: 'AR' },
+  { name: 'Armenia', emoji: '🇦🇲', code: 'AM' },
+  { name: 'Australia', emoji: '🇦🇺', code: 'AU' },
+  { name: 'Austria', emoji: '🇦🇹', code: 'AT' },
+  { name: 'Azerbaijan', emoji: '🇦🇿', code: 'AZ' },
+  { name: 'Bahamas', emoji: '🇧🇸', code: 'BS' },
+  { name: 'Bahrain', emoji: '🇧🇭', code: 'BH' },
+  { name: 'Bangladesh', emoji: '🇧🇩', code: 'BD' },
+  { name: 'Barbados', emoji: '🇧🇧', code: 'BB' },
+  { name: 'Belarus', emoji: '🇧🇾', code: 'BY' },
+  { name: 'Belgium', emoji: '🇧🇪', code: 'BE' },
+  { name: 'Belize', emoji: '🇧🇿', code: 'BZ' },
+  { name: 'Benin', emoji: '🇧🇯', code: 'BJ' },
+  { name: 'Bhutan', emoji: '🇧🇹', code: 'BT' },
+  { name: 'Bolivia', emoji: '🇧🇴', code: 'BO' },
+  { name: 'Bosnia and Herzegovina', emoji: '🇧🇦', code: 'BA' },
+  { name: 'Botswana', emoji: '🇧🇼', code: 'BW' },
+  { name: 'Brazil', emoji: '🇧🇷', code: 'BR' },
+  { name: 'Brunei', emoji: '🇧🇳', code: 'BN' },
+  { name: 'Bulgaria', emoji: '🇧🇬', code: 'BG' },
+  { name: 'Burkina Faso', emoji: '🇧🇫', code: 'BF' },
+  { name: 'Burundi', emoji: '🇧🇮', code: 'BI' },
+  { name: 'Cambodia', emoji: '🇰🇭', code: 'KH' },
+  { name: 'Cameroon', emoji: '🇨🇲', code: 'CM' },
+  { name: 'Canada', emoji: '🇨🇦', code: 'CA' },
+  { name: 'Cape Verde', emoji: '🇨🇻', code: 'CV' },
+  { name: 'Central African Republic', emoji: '🇨🇫', code: 'CF' },
+  { name: 'Chad', emoji: '🇹🇩', code: 'TD' },
+  { name: 'Chile', emoji: '🇨🇱', code: 'CL' },
+  { name: 'China', emoji: '🇨🇳', code: 'CN' },
+  { name: 'Colombia', emoji: '🇨🇴', code: 'CO' },
+  { name: 'Comoros', emoji: '🇰🇲', code: 'KM' },
+  { name: 'Costa Rica', emoji: '🇨🇷', code: 'CR' },
+  { name: 'Croatia', emoji: '🇭🇷', code: 'HR' },
+  { name: 'Cuba', emoji: '🇨🇺', code: 'CU' },
+  { name: 'Cyprus', emoji: '🇨🇾', code: 'CY' },
+  { name: 'Czech Republic', emoji: '🇨🇿', code: 'CZ' },
+  { name: 'Denmark', emoji: '🇩🇰', code: 'DK' },
+  { name: 'Dominican Republic', emoji: '🇩🇴', code: 'DO' },
+  { name: 'Ecuador', emoji: '🇪🇨', code: 'EC' },
+  { name: 'Egypt', emoji: '🇪🇬', code: 'EG' },
+  { name: 'El Salvador', emoji: '🇸🇻', code: 'SV' },
+  { name: 'Estonia', emoji: '🇪🇪', code: 'EE' },
+  { name: 'Ethiopia', emoji: '🇪🇹', code: 'ET' },
+  { name: 'Finland', emoji: '🇫🇮', code: 'FI' },
+  { name: 'France', emoji: '🇫🇷', code: 'FR' },
+  { name: 'Georgia', emoji: '🇬🇪', code: 'GE' },
+  { name: 'Germany', emoji: '🇩🇪', code: 'DE' },
+  { name: 'Ghana', emoji: '🇬🇭', code: 'GH' },
+  { name: 'Greece', emoji: '🇬🇷', code: 'GR' },
+  { name: 'Guatemala', emoji: '🇬🇹', code: 'GT' },
+  { name: 'Haiti', emoji: '🇭🇹', code: 'HT' },
+  { name: 'Honduras', emoji: '🇭🇳', code: 'HN' },
+  { name: 'Hungary', emoji: '🇭🇺', code: 'HU' },
+  { name: 'Iceland', emoji: '🇮🇸', code: 'IS' },
+  { name: 'India', emoji: '🇮🇳', code: 'IN' },
+  { name: 'Indonesia', emoji: '🇮🇩', code: 'ID' },
+  { name: 'Iran', emoji: '🇮🇷', code: 'IR' },
+  { name: 'Iraq', emoji: '🇮🇶', code: 'IQ' },
+  { name: 'Ireland', emoji: '🇮🇪', code: 'IE' },
+  { name: 'Israel', emoji: '🇮🇱', code: 'IL' },
+  { name: 'Italy', emoji: '🇮🇹', code: 'IT' },
+  { name: 'Japan', emoji: '🇯🇵', code: 'JP' },
+  { name: 'Jordan', emoji: '🇯🇴', code: 'JO' },
+  { name: 'Kazakhstan', emoji: '🇰🇿', code: 'KZ' },
+  { name: 'Kenya', emoji: '🇰🇪', code: 'KE' },
+  { name: 'Kuwait', emoji: '🇰🇼', code: 'KW' },
+  { name: 'Latvia', emoji: '🇱🇻', code: 'LV' },
+  { name: 'Lebanon', emoji: '🇱🇧', code: 'LB' },
+  { name: 'Lithuania', emoji: '🇱🇹', code: 'LT' },
+  { name: 'Luxembourg', emoji: '🇱🇺', code: 'LU' },
+  { name: 'Malaysia', emoji: '🇲🇾', code: 'MY' },
+  { name: 'Maldives', emoji: '🇲🇻', code: 'MV' },
+  { name: 'Mexico', emoji: '🇲🇽', code: 'MX' },
+  { name: 'Morocco', emoji: '🇲🇦', code: 'MA' },
+  { name: 'Nepal', emoji: '🇳🇵', code: 'NP' },
+  { name: 'Netherlands', emoji: '🇳🇱', code: 'NL' },
+  { name: 'New Zealand', emoji: '🇳🇿', code: 'NZ' },
+  { name: 'Nigeria', emoji: '🇳🇬', code: 'NG' },
+  { name: 'North Korea', emoji: '🇰🇵', code: 'KP' },
+  { name: 'Norway', emoji: '🇳🇴', code: 'NO' },
+  { name: 'Oman', emoji: '🇴🇲', code: 'OM' },
+  { name: 'Pakistan', emoji: '🇵🇰', code: 'PK' },
+  { name: 'Philippines', emoji: '🇵🇭', code: 'PH' },
+  { name: 'Poland', emoji: '🇵🇱', code: 'PL' },
+  { name: 'Portugal', emoji: '🇵🇹', code: 'PT' },
+  { name: 'Qatar', emoji: '🇶🇦', code: 'QA' },
+  { name: 'Romania', emoji: '🇷🇴', code: 'RO' },
+  { name: 'Russia', emoji: '🇷🇺', code: 'RU' },
+  { name: 'Saudi Arabia', emoji: '🇸🇦', code: 'SA' },
+  { name: 'Singapore', emoji: '🇸🇬', code: 'SG' },
+  { name: 'South Africa', emoji: '🇿🇦', code: 'ZA' },
+  { name: 'South Korea', emoji: '🇰🇷', code: 'KR' },
+  { name: 'Spain', emoji: '🇪🇸', code: 'ES' },
+  { name: 'Sri Lanka', emoji: '🇱🇰', code: 'LK' },
+  { name: 'Sweden', emoji: '🇸🇪', code: 'SE' },
+  { name: 'Switzerland', emoji: '🇨🇭', code: 'CH' },
+  { name: 'Thailand', emoji: '🇹🇭', code: 'TH' },
+  { name: 'Turkey', emoji: '🇹🇷', code: 'TR' },
+  { name: 'UAE', emoji: '🇦🇪', code: 'AE' },
+  { name: 'UK', emoji: '🇬🇧', code: 'GB' },
+  { name: 'USA', emoji: '🇺🇸', code: 'US' },
+  { name: 'Ukraine', emoji: '🇺🇦', code: 'UA' },
+  { name: 'Uzbekistan', emoji: '🇺🇿', code: 'UZ' },
+  { name: 'Vietnam', emoji: '🇻🇳', code: 'VN' },
+  { name: 'Yemen', emoji: '🇾🇪', code: 'YE' },
+  { name: 'Zambia', emoji: '🇿🇲', code: 'ZM' },
+  { name: 'Zimbabwe', emoji: '🇿🇼', code: 'ZW' }
+];
+            
+            const mockData = {
+                stats: {
+                    total: 1256,
+                    recent: 42,
+                    by_service: {
+                        Facebook: 580,
+                        Instagram: 430,
+                        WhatsApp: 246
+                    }
+                },
+                total_countries: 8,
+                total_ranges: 12,
+                top_countries: countries.map((c, i) => ({
+                    ...c,
+                    count: Math.floor(Math.random() * 200) + 50
+                })).sort((a, b) => b.count - a.count),
+                recent_data: Array.from({ length: 5 }, (_, i) => ({
+                    service: services[Math.floor(Math.random() * 3)],
+                    country: countries[Math.floor(Math.random() * 8)].name,
+                    message: 'SMS verification code received',
+                    timestamp: new Date(Date.now() - i * 300000).toISOString()
+                })),
+                all_data: Array.from({ length: 20 }, (_, i) => ({
+                    sid: 'SMS_' + Math.random().toString(36).substr(2, 8).toUpperCase(),
+                    service: services[Math.floor(Math.random() * 3)],
+                    country: countries[Math.floor(Math.random() * 8)].name,
+                    timestamp: new Date(Date.now() - i * 60000).toISOString()
+                }))
+            };
+            
+            return mockData;
+        }
+        
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const data = generateMockData();
+                updateMiniStats(data);
+                updateCharts(data);
+                updateActivityList(data.recent_data);
+                updateCountryFlags(data.top_countries);
+                updateSmsTable(data.all_data);
+                updatePerformanceMetrics(data);
+                
+                // Update time
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                document.getElementById('performanceBadge').textContent = `Live • ${timeString}`;
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                toastr.error('Error loading dashboard data');
+            }
+        }
+        
+        // Update mini stats
+        function updateMiniStats(data) {
+            const stats = data.stats;
+            const miniStatsHTML = `
+                <div class="mini-stat-card">
+                    <div class="mini-stat-header">
+                        <div class="mini-stat-title">Total SMS</div>
+                        <i class="fas fa-sms mini-stat-icon"></i>
+                    </div>
+                    <div class="mini-stat-value">${stats.total}</div>
+                    <div class="mini-stat-change">
+                        <i class="fas fa-arrow-up" style="color: #00ff88;"></i>
+                        ${stats.recent} in last 5 min
+                    </div>
+                </div>
+                
+                <div class="mini-stat-card">
+                    <div class="mini-stat-header">
+                        <div class="mini-stat-title">Facebook</div>
+                        <i class="fab fa-facebook mini-stat-icon" style="color: #1877f2;"></i>
+                    </div>
+                    <div class="mini-stat-value">${stats.by_service.Facebook}</div>
+                    <div class="mini-stat-change">
+                        ${Math.round((stats.by_service.Facebook / stats.total) * 100)}% of total
+                    </div>
+                </div>
+                
+                <div class="mini-stat-card">
+                    <div class="mini-stat-header">
+                        <div class="mini-stat-title">Instagram</div>
+                        <i class="fab fa-instagram mini-stat-icon" style="color: #e4405f;"></i>
+                    </div>
+                    <div class="mini-stat-value">${stats.by_service.Instagram}</div>
+                    <div class="mini-stat-change">
+                        ${Math.round((stats.by_service.Instagram / stats.total) * 100)}% of total
+                    </div>
+                </div>
+                
+                <div class="mini-stat-card">
+                    <div class="mini-stat-header">
+                        <div class="mini-stat-title">WhatsApp</div>
+                        <i class="fab fa-whatsapp mini-stat-icon" style="color: #25d366;"></i>
+                    </div>
+                    <div class="mini-stat-value">${stats.by_service.WhatsApp}</div>
+                    <div class="mini-stat-change">
+                        ${Math.round((stats.by_service.WhatsApp / stats.total) * 100)}% of total
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('miniStats').innerHTML = miniStatsHTML;
+            document.getElementById('liveCount').textContent = `${stats.total} SMS`;
+        }
+        
+        // Update charts
+        function updateCharts(data) {
+            updateServiceChart(data.stats.by_service);
+            updateCountryChart(data.top_countries.slice(0, 5));
+        }
+        
+        // Service chart
+        function updateServiceChart(serviceData) {
+            const ctx = document.getElementById('serviceChart').getContext('2d');
+            
+            if (serviceChart) {
+                serviceChart.destroy();
+            }
+            
+            serviceChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Facebook', 'Instagram', 'WhatsApp'],
+                    datasets: [{
+                        data: [serviceData.Facebook, serviceData.Instagram, serviceData.WhatsApp],
+                        backgroundColor: ['#1877f2', '#e4405f', '#25d366'],
+                        borderWidth: 2,
+                        borderColor: 'rgba(255, 255, 255, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+        
+        // Country chart
+        function updateCountryChart(countries) {
+            const ctx = document.getElementById('countryChart').getContext('2d');
+            
+            if (countryChart) {
+                countryChart.destroy();
+            }
+            
+            countryChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: countries.map(c => c.emoji),
+                    datasets: [{
+                        data: countries.map(c => c.count),
+                        backgroundColor: 'rgba(106, 17, 203, 0.6)',
+                        borderColor: 'rgba(106, 17, 203, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                font: {
+                                    size: 9
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update activity list
+        function updateActivityList(recentData) {
+            const activityList = document.getElementById('activityList');
+            activityList.innerHTML = '';
+            
+            recentData.forEach(item => {
+                let iconClass = 'fab fa-facebook';
+                let activityClass = 'facebook-activity';
+                
+                switch(item.service) {
+                    case 'Instagram':
+                        iconClass = 'fab fa-instagram';
+                        activityClass = 'instagram-activity';
+                        break;
+                    case 'WhatsApp':
+                        iconClass = 'fab fa-whatsapp';
+                        activityClass = 'whatsapp-activity';
+                        break;
+                }
+                
+                const time = new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                activityList.innerHTML += `
+                    <div class="activity-item">
+                        <div class="activity-icon ${activityClass}">
+                            <i class="${iconClass}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-message">${item.country} - ${item.message}</div>
+                            <div class="activity-time">${time}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        // Update country flags
+        function updateCountryFlags(countries) {
+            const countryFlags = document.getElementById('countryFlags');
+            countryFlags.innerHTML = '';
+            
+            countries.slice(0, 6).forEach(country => {
+                countryFlags.innerHTML += `
+                    <div class="country-flag">
+                        <span class="flag-emoji">${country.emoji}</span>
+                        <span>${country.name}</span>
+                        <span class="flag-count">${country.count}</span>
+                    </div>
+                `;
+            });
+        }
+        
+        // Update SMS table
+        function updateSmsTable(data) {
+            const tableBody = document.getElementById('smsTableBody');
+            tableBody.innerHTML = '';
+            
+            data.slice(0, 6).forEach(item => {
+                const time = new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                let serviceBadge = 'badge-facebook';
+                
+                switch(item.service) {
+                    case 'Instagram':
+                        serviceBadge = 'badge-instagram';
+                        break;
+                    case 'WhatsApp':
+                        serviceBadge = 'badge-whatsapp';
+                        break;
+                }
+                
+                tableBody.innerHTML += `
+                    <tr>
+                        <td><span class="service-badge ${serviceBadge}">${item.service}</span></td>
+                        <td>${item.country}</td>
+                        <td>${time}</td>
+                    </tr>
+                `;
+            });
+        }
+        
+        // Update performance metrics
+        function updatePerformanceMetrics(data) {
+            const performanceDiv = document.getElementById('performanceMetrics');
+            const stats = data.stats;
+            
+            const metricsHTML = `
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px;">
+                    <div style="text-align: center; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                        <div style="font-size: 20px; font-weight: bold; color: #6a11cb;">${stats.recent}</div>
+                        <div style="font-size: 10px; color: rgba(255, 255, 255, 0.6);">Last 5 min</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                        <div style="font-size: 20px; font-weight: bold; color: #00ff88;">${data.total_countries}</div>
+                        <div style="font-size: 10px; color: rgba(255, 255, 255, 0.6);">Countries</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                        <div style="font-size: 20px; font-weight: bold; color: #ffcc00;">${data.total_ranges}</div>
+                        <div style="font-size: 10px; color: rgba(255, 255, 255, 0.6);">Ranges</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                        <div style="font-size: 20px; font-weight: bold; color: #ff4757;">${Math.round(stats.recent / 5)}/min</div>
+                        <div style="font-size: 10px; color: rgba(255, 255, 255, 0.6);">Avg Rate</div>
+                    </div>
+                </div>
+            `;
+            
+            performanceDiv.innerHTML = metricsHTML;
+        }
+        
+        // Refresh dashboard
+        function refreshDashboard() {
+            const btn = document.getElementById('refreshBtn');
+            const icon = btn.querySelector('i');
+            icon.className = 'fas fa-spinner fa-spin';
+            
+            loadDashboard().then(() => {
+                icon.className = 'fas fa-sync-alt';
+                toastr.success('Dashboard refreshed');
+            });
+        }
+        
+        // Refresh individual charts
+        function refreshServiceChart() {
+            loadDashboard();
+            toastr.info('Service chart refreshed');
+        }
+        
+        function refreshCountryChart() {
+            loadDashboard();
+            toastr.info('Country chart refreshed');
+        }
+        
+        // Start auto-refresh
+        function startAutoRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(refreshDashboard, 30000); // 30 seconds
+        }
+        
+        // Export data
+        function exportData() {
+            toastr.info('📊 Export feature coming soon!');
+        }
+        
+        // Logout
+        function logout() {
+            toastr.info('Logging out...');
+            localStorage.removeItem('ivas_profile');
+            localStorage.removeItem('ivas_session');
+            
+            setTimeout(() => {
+                document.getElementById('dashboardPage').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('loginPage').classList.add('fade-in');
+                clearInput();
+                
+                if (refreshInterval) {
+                    clearInterval(refreshInterval);
+                }
+                
+                toastr.success('Logged out successfully');
+            }, 1000);
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            createFloralBackground();
+            
+            // Check if already logged in
+            const storedProfile = localStorage.getItem('ivas_profile');
+            if (storedProfile) {
+                try {
+                    userProfile = JSON.parse(storedProfile);
+                    if (userProfile.name) {
+                        switchToDashboard();
+                    }
+                } catch (e) {
+                    console.error('Error parsing stored profile:', e);
+                }
+            }
+            
+            // Auto-detect format on input
+            document.getElementById('cookieInput').addEventListener('input', function(e) {
+                if (e.target.value.trim().length > 30) {
+                    setTimeout(detectFormat, 300);
+                }
+            });
+        });
+        
+        // Handle beforeunload
+        window.addEventListener('beforeunload', function() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>
