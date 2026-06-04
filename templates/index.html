@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live SMS Intelligence • Professional Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0f1f;
+      --sidebar: #0e1326;
+      --surface: #131a2e;
+      --surface2: #1b233a;
+      --border: #243049;
+      --text: #e8edf5;
+      --text2: #94a3b8;
+      --accent: #6366f1;
+      --accent2: #818cf8;
+      --green: #10b981;
+      --red: #ef4444;
+      --orange: #f59e0b;
+      --shadow: 0 8px 32px rgba(0,0,0,0.3);
+      --radius: 16px;
+      --transition: 0.2s ease;
+    }
+    .light {
+      --bg: #f1f5f9;
+      --sidebar: #ffffff;
+      --surface: #ffffff;
+      --surface2: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text2: #475569;
+      --shadow: 0 4px 16px rgba(0,0,0,0.05);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar);
+      padding: 2rem 1.5rem;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+    }
+    .nav-item {
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text2);
+    }
+    .nav-item:hover, .nav-item.active {
+      background: var(--accent);
+      color: white;
+    }
+    .nav-item i { font-style: normal; font-size: 1.2rem; }
+    .theme-toggle-btn {
+      margin-top: auto;
+      background: var(--surface2);
+      border: none;
+      color: var(--text);
+      padding: 0.6rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .main {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      transition: transform var(--transition);
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .stat-label { font-size: 0.85rem; color: var(--text2); margin-bottom: 0.25rem; }
+    .stat-value { font-size: 2rem; font-weight: 700; }
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .card-header {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .live-feed {
+      max-height: 380px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .live-msg {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      border-left: 4px solid var(--accent);
+    }
+    .live-msg .time { font-size: 0.75rem; color: var(--text2); }
+    .live-msg .details { font-size: 0.9rem; font-weight: 500; }
+    .live-msg .msg-text { font-size: 0.85rem; color: var(--text2); margin-top: 0.25rem; }
+    .ranking-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .rank-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .hot-alert {
+      background: rgba(239,68,68,0.1);
+      border-left: 4px solid var(--red);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+    .search-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .search-bar input {
+      flex: 1;
+      min-width: 120px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+    }
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .btn:hover { background: var(--accent2); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { background: var(--surface2); }
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: var(--surface2); padding: 0.75rem 1rem; text-align: left; font-weight: 600; }
+    td { padding: 0.75rem 1rem; border-top: 1px solid var(--border); }
+    .map-container { height: 350px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+    .auth-card, .settings-card {
+      max-width: 420px;
+      margin: 4rem auto;
+      background: var(--surface);
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .auth-card h2, .settings-card h2 { margin-bottom: 1.5rem; }
+    .input-group { margin-bottom: 1rem; }
+    .input-group input, .input-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+    }
+    textarea { resize: vertical; }
+    .error-msg { color: var(--red); font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .success-msg { color: var(--green); font-size: 0.9rem; margin-bottom: 0.5rem; }
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 1rem;
+      }
+      .panel-grid { grid-template-columns: 1fr; }
+    }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="dark">
+  <aside class="sidebar">
+    <div class="logo">
+      <span>📡</span> IVASMS
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-view="dashboard">🏠 Dashboard</div>
+      <div class="nav-item" data-view="login" id="nav-login">🔐 Login</div>
+      <div class="nav-item" data-view="settings" id="nav-settings" style="display:none;">⚙️ Settings</div>
+      <div class="nav-item" id="nav-logout" style="display:none;">🚪 Logout</div>
+    </nav>
+    <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Toggle Theme</button>
+  </aside>
+
+  <main class="main">
+    <!-- Dashboard View -->
+    <div id="view-dashboard" class="view active fade-in">
+      <div class="stats-grid" id="stats-cards"></div>
+
+      <div class="panel-grid">
+        <div class="card">
+          <div class="card-header">⚡ Live Feed <span style="font-size:0.8rem; color:var(--text2)" id="live-counter"></span></div>
+          <div class="live-feed" id="live-feed">Loading...</div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-header">📈 SMS Trend <span id="prediction" style="font-size:0.8rem; color:var(--accent)"></span></div>
+            <canvas id="trendChart" height="200"></canvas>
+          </div>
+          <div class="card" style="margin-top:1rem;">
+            <div class="card-header">🔥 Top Ranges</div>
+            <div class="ranking-list" id="top-ranges"></div>
+          </div>
+          <div class="card" style="margin-top:1rem;">
+            <div class="card-header">⚙️ Services</div>
+            <div class="ranking-list" id="services"></div>
+          </div>
+          <div class="card" style="margin-top:1rem;">
+            <div class="card-header">🚨 Hot Alerts</div>
+            <div id="hot-alerts">No alerts</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">🔍 Historical Search & Export</div>
+        <div class="search-bar">
+          <input type="text" id="search-number" placeholder="Phone number">
+          <input type="text" id="search-service" placeholder="Service (Google, FB..)">
+          <input type="text" id="search-country" placeholder="Country (US, IN..)">
+          <input type="text" id="search-text" placeholder="Message contains...">
+          <button class="btn" onclick="searchHistory()">Search</button>
+          <button class="btn btn-outline" onclick="exportData('csv')">📥 CSV</button>
+          <button class="btn btn-outline" onclick="exportData('json')">📥 JSON</button>
+        </div>
+        <div class="table-wrap" id="history-results"></div>
+      </div>
+
+      <div class="panel-grid" style="margin-top:1.5rem;">
+        <div class="card">
+          <div class="card-header">🔎 Range Explorer</div>
+          <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+            <select id="range-select" style="flex:1; padding:0.5rem; border-radius:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border);"></select>
+            <button class="btn" onclick="loadRangeNumbers()">View Numbers</button>
+          </div>
+          <div id="range-numbers" style="max-height:250px; overflow-y:auto;"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">🌍 Country Activity</div>
+          <div class="map-container" id="map"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login View -->
+    <div id="view-login" class="view">
+      <div class="auth-card">
+        <h2>Welcome back</h2>
+        <div id="login-error" class="error-msg"></div>
+        <div class="input-group">
+          <input type="text" id="login-username" placeholder="Username">
+        </div>
+        <div class="input-group">
+          <input type="password" id="login-password" placeholder="Password">
+        </div>
+        <button class="btn" style="width:100%" onclick="doLogin()">Sign In</button>
+      </div>
+    </div>
+
+    <!-- Settings View -->
+    <div id="view-settings" class="view">
+      <div class="settings-card">
+        <h2>Upload Cookies</h2>
+        <div id="settings-msg" class="success-msg"></div>
+
+        <p style="margin-bottom:0.5rem; font-weight:500;">Option 1: Upload JSON file</p>
+        <div class="input-group">
+          <input type="file" id="cookies-file" accept=".json">
+        </div>
+
+        <p style="margin-bottom:0.5rem; font-weight:500;">Option 2: Paste cookies (base64 or plain JSON)</p>
+        <div class="input-group">
+          <textarea id="cookies-text" rows="6" placeholder="Paste base64 or JSON here..."></textarea>
+        </div>
+
+        <button class="btn" style="width:100%; margin-top:1rem;" onclick="uploadCookies()">Upload &amp; Apply</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const API = window.location.origin;
+    const fetchJSON = (url, opts) => fetch(url, opts).then(r => r.json());
+
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+    }
+    if(localStorage.getItem('theme') === 'light') document.body.classList.add('light');
+
+    const navItems = document.querySelectorAll('.nav-item[data-view]');
+    const views = document.querySelectorAll('.view');
+    function showView(viewName) {
+      views.forEach(v => v.classList.remove('active', 'fade-in'));
+      document.getElementById('view-' + viewName).classList.add('active', 'fade-in');
+      navItems.forEach(n => n.classList.remove('active'));
+      document.querySelector(`.nav-item[data-view="${viewName}"]`)?.classList.add('active');
+      if(viewName === 'dashboard') initDashboard();
+    }
+    navItems.forEach(item => item.addEventListener('click', () => {
+      if(item.dataset.view) showView(item.dataset.view);
+    }));
+    document.getElementById('nav-logout').addEventListener('click', logout);
+    document.getElementById('nav-login').addEventListener('click', () => showView('login'));
+    document.getElementById('nav-settings').addEventListener('click', () => showView('settings'));
+
+    async function updateAuthUI() {
+      const data = await fetchJSON(`${API}/api/auth/status`);
+      if(data.authenticated) {
+        document.getElementById('nav-login').style.display = 'none';
+        document.getElementById('nav-logout').style.display = 'flex';
+        document.getElementById('nav-settings').style.display = 'flex';
+      } else {
+        document.getElementById('nav-login').style.display = 'flex';
+        document.getElementById('nav-logout').style.display = 'none';
+        document.getElementById('nav-settings').style.display = 'none';
+      }
+    }
+
+    async function doLogin() {
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      const res = await fetchJSON(`${API}/api/login`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username, password})
+      });
+      if(res.success) {
+        updateAuthUI();
+        showView('dashboard');
+      } else {
+        document.getElementById('login-error').textContent = res.error || 'Invalid credentials';
+      }
+    }
+
+    async function logout() {
+      await fetch(`${API}/api/logout`, {method:'POST'});
+      updateAuthUI();
+      showView('dashboard');
+    }
+
+    async function uploadCookies() {
+      const fileInput = document.getElementById('cookies-file');
+      const textArea = document.getElementById('cookies-text');
+      const file = fileInput.files[0];
+      const text = textArea.value.trim();
+
+      if (!file && !text) {
+        document.getElementById('settings-msg').textContent = 'Please select a file or paste cookies.';
+        return;
+      }
+
+      let body;
+      let headers = {};
+      if (file) {
+        body = new FormData();
+        body.append('cookies_file', file);
+      } else {
+        body = new URLSearchParams();
+        body.append('cookies_text', text);
+        headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      }
+
+      const res = await fetchJSON(`${API}/api/settings/upload-cookies`, {
+        method: 'POST',
+        body: body,
+        headers: headers
+      });
+
+      document.getElementById('settings-msg').textContent = res.success
+        ? 'Cookies updated successfully!'
+        : (res.error || 'Error');
+    }
+
+    // Dashboard functions
+    function updateStats() {
+      fetchJSON(`${API}/api/stats`).then(data => {
+        document.getElementById('stats-cards').innerHTML = `
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-label">Total SMS</div>
+            <div class="stat-value">${data.total_sms}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-label">Paid</div>
+            <div class="stat-value">${data.paid_sms}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-label">Unpaid</div>
+            <div class="stat-value">${data.unpaid_sms}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-label">Revenue</div>
+            <div class="stat-value">$${data.revenue}</div>
+          </div>
+        `;
+      }).catch(()=>{});
+    }
+
+    function updateLive() {
+      fetchJSON(`${API}/api/live`).then(msgs => {
+        const feed = document.getElementById('live-feed');
+        feed.innerHTML = msgs.slice(-15).reverse().map(m => `
+          <div class="live-msg">
+            <div class="time">${m.time}</div>
+            <div class="details">${m.country} • ${m.number} → ${m.service}</div>
+            <div class="msg-text">${m.message}</div>
+          </div>
+        `).join('');
+        document.getElementById('live-counter').textContent = `${msgs.length} messages today`;
+      }).catch(()=>{});
+    }
+
+    function updateInsights() {
+      fetchJSON(`${API}/api/top-ranges`).then(data => {
+        document.getElementById('top-ranges').innerHTML = data.map(r =>
+          `<div class="rank-item"><span>📞 ${r[0]}</span><span>${r[1]} msgs</span></div>`
+        ).join('') || 'No data';
+      });
+      fetchJSON(`${API}/api/services`).then(data => {
+        document.getElementById('services').innerHTML = data.map(s =>
+          `<div class="rank-item"><span>${s[0]}</span><span>${s[1]}</span></div>`
+        ).join('') || 'No data';
+      });
+      fetchJSON(`${API}/api/hot-ranges`).then(data => {
+        document.getElementById('hot-alerts').innerHTML = data.map(r =>
+          `<div class="hot-alert">⚠️ <strong>${r.range}</strong>: ${r.count} msgs (avg ${r.avg.toFixed(1)})</div>`
+        ).join('') || '<div style="color:var(--text2)">No unusual activity</div>';
+      });
+    }
+
+    let trendChart;
+    function updateTrend() {
+      Promise.all([fetchJSON(`${API}/api/trends`), fetchJSON(`${API}/api/prediction`)]).then(([data, pred]) => {
+        document.getElementById('prediction').textContent = `next hour ~${pred.next_hour_prediction} msgs`;
+        if(!trendChart) {
+          const ctx = document.getElementById('trendChart').getContext('2d');
+          trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: data.map(d => d.minute),
+              datasets: [{
+                label: 'SMS/min',
+                data: data.map(d => d.count),
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99,102,241,0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 0
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } }
+            }
+          });
+        } else {
+          trendChart.data.labels = data.map(d => d.minute);
+          trendChart.data.datasets[0].data = data.map(d => d.count);
+          trendChart.update();
+        }
+      }).catch(()=>{});
+    }
+
+    let map, countryMarkers = {};
+    function initMap() {
+      map = L.map('map').setView([20, 0], 2);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OSM'
+      }).addTo(map);
+    }
+
+    function updateCountries() {
+      fetchJSON(`${API}/api/countries`).then(countries => {
+        if(!map) initMap();
+        for(let key in countryMarkers) map.removeLayer(countryMarkers[key]);
+        countryMarkers = {};
+        const coords = {"US":[37,-95],"IN":[20,78],"GB":[55,-3],"DE":[51,9],"BR":[-10,-55],"ID":[-6,106],"NG":[9,8],"RU":[60,100],"JP":[36,138],"PK":[30,70],"BD":[24,90],"TR":[39,35],"EG":[27,30],"ZA":[-30,25],"MX":[23,-102]};
+        countries.slice(0,20).forEach(([country, count]) => {
+          if(coords[country]) {
+            const marker = L.circleMarker(coords[country], {
+              radius: Math.min(count*2.5, 25),
+              color: '#6366f1',
+              fillColor: '#818cf8',
+              fillOpacity: 0.5
+            }).addTo(map).bindPopup(`${country}: ${count} SMS`);
+            countryMarkers[country] = marker;
+          }
+        });
+      }).catch(()=>{});
+    }
+
+    function loadRanges() {
+      fetchJSON(`${API}/api/range/list`).then(ranges => {
+        document.getElementById('range-select').innerHTML = ranges.map(r => `<option value="${r}">${r}</option>`).join('');
+      }).catch(()=>{});
+    }
+
+    function loadRangeNumbers() {
+      const rangeId = document.getElementById('range-select').value;
+      fetchJSON(`${API}/api/range/${rangeId}`).then(data => {
+        document.getElementById('range-numbers').innerHTML =
+          `<div style="margin-bottom:0.5rem; font-weight:500;">Total: ${data.total}</div>` +
+          data.numbers.slice(0,20).map(n =>
+            `<div style="padding:0.3rem 0; border-bottom:1px solid var(--border);">${n.number} <span style="color:var(--text2)">(${n.count} SMS)</span></div>`
+          ).join('');
+      }).catch(()=>{});
+    }
+
+    function searchHistory() {
+      const params = new URLSearchParams();
+      ['number','service','country','text'].forEach(id => {
+        const el = document.getElementById('search-' + id);
+        if(el?.value) params.append(id, el.value);
+      });
+      fetchJSON(`${API}/api/history?${params.toString()}`).then(data => {
+        document.getElementById('history-results').innerHTML = `
+          <table>
+            <thead><tr><th>Timestamp</th><th>Country</th><th>Number</th><th>Service</th><th>Message</th></tr></thead>
+            <tbody>${data.map(r => `<tr><td>${r.timestamp}</td><td>${r.country}</td><td>${r.number}</td><td>${r.service}</td><td>${r.message}</td></tr>`).join('')}</tbody>
+          </table>`;
+      });
+    }
+
+    function exportData(format) {
+      const params = new URLSearchParams();
+      ['number','service','country','text'].forEach(id => {
+        const el = document.getElementById('search-' + id);
+        if(el?.value) params.append(id, el.value);
+      });
+      params.append('format', format);
+      window.open(`${API}/api/export?${params.toString()}`, '_blank');
+    }
+
+    function initDashboard() {
+      updateStats();
+      updateLive();
+      updateInsights();
+      updateTrend();
+      updateCountries();
+      loadRanges();
+    }
+
+    setInterval(() => {
+      if(document.getElementById('view-dashboard').classList.contains('active')) {
+        updateStats();
+        updateLive();
+        updateInsights();
+        updateTrend();
+        updateCountries();
+      }
+    }, 5000);
+
+    window.addEventListener('load', () => {
+      updateAuthUI();
+      showView('dashboard');
+    });
+  </script>
+</body>
+</html>
