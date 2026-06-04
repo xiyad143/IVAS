@@ -1,0 +1,6 @@
+flask
+cloudscraper
+beautifulsoup4
+brotli
+bcrypt
+flask-login
