@@ -71,16 +71,24 @@ class IVASClient:
             if not row:
                 return False
             cookies_raw = json.loads(row[0])
+
+            # Normalize to list of cookie objects
             if isinstance(cookies_raw, dict):
-                cookies = cookies_raw
+                cookie_list = [{'name': k, 'value': v} for k, v in cookies_raw.items()]
             elif isinstance(cookies_raw, list):
-                cookies = {c['name']: c['value'] for c in cookies_raw if 'name' in c and 'value' in c}
+                cookie_list = cookies_raw
             else:
                 return False
 
-            for name, value in cookies.items():
-                self.scraper.cookies.set(name, value, domain="www.ivasms.com")
+            # Set each cookie with its original domain (fallback to www.ivasms.com)
+            for c in cookie_list:
+                name = c.get('name')
+                value = c.get('value')
+                domain = c.get('domain', 'www.ivasms.com')
+                if name and value:
+                    self.scraper.cookies.set(name, value, domain=domain)
 
+            # Verify login by accessing a protected page
             r = self.scraper.get(f"{BASE_URL}/portal/sms/received")
             if r.status_code == 200:
                 soup = BeautifulSoup(r.text, 'html.parser')
